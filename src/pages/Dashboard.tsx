@@ -19,7 +19,7 @@ const Dashboard = () => {
   }, [navigate]);
   
   return (
-    <div className="min-h-screen flex flex-col" dir={i18n.language.startsWith("ar") ? "rtl" : "ltr"}>
+    <div className="min-h-screen flex flex-col">
       <Header />
       
       <div className="flex-1 flex overflow-hidden">

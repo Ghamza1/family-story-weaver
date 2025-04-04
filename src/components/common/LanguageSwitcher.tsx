@@ -15,8 +15,7 @@ const LanguageSwitcher = () => {
   const changeLanguage = (language: string) => {
     i18n.changeLanguage(language);
     localStorage.setItem("language", language);
-    // If using RTL support for Arabic, you would add direction handling here
-    document.documentElement.dir = language.startsWith("ar") ? "rtl" : "ltr";
+    // Removed RTL direction setting
   };
   
   return (
@@ -31,7 +30,7 @@ const LanguageSwitcher = () => {
           <span className={i18n.language === "en" ? "font-bold" : ""}>English</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => changeLanguage("ar-TN")}>
-          <span className={i18n.language === "ar-TN" ? "font-bold" : ""}>العربية التونسية</span>
+          <span className={i18n.language === "ar-TN" ? "font-bold" : ""}>Arabic</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

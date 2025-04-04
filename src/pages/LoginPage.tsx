@@ -19,7 +19,7 @@ const LoginPage = () => {
   }, [navigate]);
   
   return (
-    <div className="min-h-screen flex flex-col bg-asli-beige/30" dir={i18n.language.startsWith("ar") ? "rtl" : "ltr"}>
+    <div className="min-h-screen flex flex-col bg-asli-beige/30">
       <div className="py-8 px-4">
         <div className="max-w-md mx-auto">
           <Link to="/" className="flex items-center justify-center mb-8">
