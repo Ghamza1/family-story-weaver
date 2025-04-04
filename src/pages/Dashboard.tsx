@@ -4,9 +4,11 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import TreeSelector from "@/components/dashboard/TreeSelector";
 import TreeDetails from "@/components/dashboard/TreeDetails";
+import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
   
   // Check if authenticated
   useEffect(() => {
@@ -17,7 +19,7 @@ const Dashboard = () => {
   }, [navigate]);
   
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" dir={i18n.language.startsWith("ar") ? "rtl" : "ltr"}>
       <Header />
       
       <div className="flex-1 flex overflow-hidden">

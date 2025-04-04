@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FamilyTreeProvider } from "@/context/FamilyTreeContext";
 import { useEffect } from "react";
+import "./i18n"; // Import i18n configuration
 
 // Pages
 import Index from "./pages/Index";

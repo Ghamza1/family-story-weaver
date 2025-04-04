@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut, User, Trees } from "lucide-react";
+import { LogOut, User, Trees, MoreVertical } from "lucide-react";
 import { useFamilyTree } from "@/context/FamilyTreeContext";
 import {
   DropdownMenu,
@@ -10,10 +11,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const Header = () => {
   const navigate = useNavigate();
   const { selectedTree } = useFamilyTree();
+  const { t } = useTranslation();
   
   const userName = localStorage.getItem("userName") || "User";
   const userEmail = localStorage.getItem("userEmail");
@@ -44,6 +48,23 @@ const Header = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          <LanguageSwitcher />
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="w-9 px-0">
+                <MoreVertical size={18} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/account-settings" className="cursor-pointer w-full">
+                  {t('header.accountSettings')}
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center">
@@ -59,7 +80,7 @@ const Header = () => {
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link to="/account-settings" className="cursor-pointer w-full">
-                  Account Settings
+                  {t('header.accountSettings')}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -68,7 +89,7 @@ const Header = () => {
                 className="text-red-500 focus:text-red-500 cursor-pointer"
               >
                 <LogOut size={16} className="mr-2" />
-                <span>Log Out</span>
+                <span>{t('header.logout')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

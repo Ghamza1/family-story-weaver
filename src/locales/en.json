@@ -1,0 +1,50 @@
+
+{
+  "header": {
+    "accountSettings": "Account Settings",
+    "logout": "Log Out"
+  },
+  "treeCanvas": {
+    "addFirstPerson": "Add First Person",
+    "addRelative": "Add Relative to {{name}}",
+    "father": "Father",
+    "mother": "Mother",
+    "spouse": "Spouse",
+    "child": "Child",
+    "sibling": "Sibling"
+  },
+  "personModal": {
+    "addPerson": "Add Person",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "maidenName": "Maiden Name",
+    "addMaidenName": "Add Maiden Name?",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "occupation": "Occupation",
+    "birthDate": "Birth Date",
+    "birthPlace": "Birth Place",
+    "recordDeath": "Record Death Information?",
+    "deathDate": "Death Date",
+    "deathPlace": "Death Place",
+    "notes": "Notes",
+    "save": "Save Person",
+    "cancel": "Cancel",
+    "requiredField": "This field is required"
+  },
+  "dashboard": {
+    "noTreeSelected": "No Tree Selected",
+    "selectTree": "Select a tree from the sidebar or create a new one to get started.",
+    "import": "Import",
+    "export": "Export",
+    "print": "Print",
+    "share": "Share"
+  },
+  "actions": {
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "resetView": "Reset View"
+  }
+}
