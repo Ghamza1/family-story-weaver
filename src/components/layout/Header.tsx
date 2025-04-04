@@ -1,7 +1,6 @@
-
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
-import { LogOut, User, Tree } from "lucide-react";
+import { LogOut, User, Trees } from "lucide-react";
 import { useFamilyTree } from "@/context/FamilyTreeContext";
 import {
   DropdownMenu,
@@ -33,7 +32,7 @@ const Header = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <Link to="/dashboard" className="flex items-center">
-            <Tree size={24} className="text-asli-terracotta mr-2" />
+            <Trees size={24} className="text-asli-terracotta mr-2" />
             <span className="text-xl font-bold text-asli-navy">ASLI</span>
           </Link>
           

@@ -1,16 +1,14 @@
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Tree, Users, Shield, Award } from "lucide-react";
+import { Trees, Users, Shield, Award } from "lucide-react";
 
 const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
       <header className="bg-white py-4 px-6 border-b border-gray-200">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center">
-            <Tree size={24} className="text-asli-terracotta mr-2" />
+            <Trees size={24} className="text-asli-terracotta mr-2" />
             <span className="text-2xl font-bold text-asli-navy">ASLI</span>
           </div>
           <div className="space-x-2">
@@ -24,7 +22,6 @@ const LandingPage = () => {
         </div>
       </header>
       
-      {/* Hero Section */}
       <div className="bg-asli-beige py-16 px-6 flex-1">
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col lg:flex-row items-center gap-12">
@@ -47,7 +44,7 @@ const LandingPage = () => {
             <div className="lg:w-1/2 flex justify-center">
               <div className="w-full max-w-md aspect-square bg-white rounded-lg shadow-xl p-8 flex items-center justify-center">
                 <div className="flex flex-col items-center">
-                  <Tree size={120} className="text-asli-terracotta mb-6 animate-pulse-light" />
+                  <Trees size={120} className="text-asli-terracotta mb-6 animate-pulse-light" />
                   <div className="text-center">
                     <h3 className="text-xl font-semibold text-asli-navy mb-2">Your Family Tree</h3>
                     <p className="text-asli-gray">Create a beautiful visualization of your family history</p>
@@ -59,7 +56,6 @@ const LandingPage = () => {
         </div>
       </div>
       
-      {/* Features Section */}
       <div className="py-16 px-6 bg-white">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-3xl font-bold text-center text-asli-navy mb-12">Why Choose ASLI?</h2>
@@ -104,7 +100,6 @@ const LandingPage = () => {
         </div>
       </div>
       
-      {/* CTA Section */}
       <div className="bg-asli-navy py-12 px-6 text-white">
         <div className="container mx-auto max-w-3xl text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Start Building Your Family Tree Today</h2>
@@ -117,12 +112,11 @@ const LandingPage = () => {
         </div>
       </div>
       
-      {/* Footer */}
       <footer className="bg-white py-8 px-6 border-t border-gray-200">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
-              <Tree size={20} className="text-asli-terracotta mr-2" />
+              <Trees size={20} className="text-asli-terracotta mr-2" />
               <span className="font-semibold text-asli-navy">ASLI</span>
             </div>
             <div className="flex gap-6 text-sm text-asli-gray">

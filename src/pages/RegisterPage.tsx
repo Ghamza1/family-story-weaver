@@ -1,9 +1,8 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import RegisterForm from "@/components/auth/RegisterForm";
 import { Link } from "react-router-dom";
-import { Tree } from "lucide-react";
+import { Trees } from "lucide-react";
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -21,7 +20,7 @@ const RegisterPage = () => {
       <div className="py-8 px-4">
         <div className="max-w-md mx-auto">
           <Link to="/" className="flex items-center justify-center mb-8">
-            <Tree size={24} className="text-asli-terracotta mr-2" />
+            <Trees size={24} className="text-asli-terracotta mr-2" />
             <span className="text-2xl font-bold text-asli-navy">ASLI</span>
           </Link>
           
