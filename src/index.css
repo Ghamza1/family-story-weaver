@@ -1,10 +1,11 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 220 33% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -13,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 215 60% 24%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 24 88% 44%;
+    --secondary-foreground: 210 40% 98%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 36 60% 72%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -97,5 +91,32 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .person-node {
+    @apply bg-white border border-asli-blue/30 rounded-md p-3 shadow-md w-48 text-center transition-all duration-200;
+  }
+  
+  .person-node:hover {
+    @apply shadow-lg border-asli-blue/60;
+  }
+  
+  .person-node.selected {
+    @apply border-2 border-asli-terracotta shadow-xl;
+  }
+  
+  .node-connector {
+    @apply stroke-asli-blue/70 stroke-2;
+  }
+  
+  .family-canvas {
+    @apply bg-asli-beige/30 relative overflow-hidden;
+    min-height: 70vh;
+  }
+  
+  .tree-controls {
+    @apply flex bg-white/80 backdrop-blur-sm p-2 rounded-lg shadow-sm gap-2 fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10;
   }
 }
