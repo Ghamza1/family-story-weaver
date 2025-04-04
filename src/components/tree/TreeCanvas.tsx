@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import PersonNode from "./PersonNode";
 import { Person } from "@/types";
@@ -10,12 +11,32 @@ import {
   Plus,
   UserPlus,
   Minus,
-  SeparatorHorizontal
+  SeparatorHorizontal,
+  MoreVertical,
+  Download,
+  Upload,
+  Printer,
+  Share2
 } from "lucide-react";
 import { useFamilyTree } from "@/context/FamilyTreeContext";
 import AddPersonModal from "./AddPersonModal";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useTranslation } from "react-i18next";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+
+interface Line {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  type: string;
+  id: string;
+  style: "solid" | "dotted";
+}
 
 const TreeCanvas = () => {
   const { t } = useTranslation();
@@ -26,7 +47,10 @@ const TreeCanvas = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showAddModal, setShowAddModal] = useState(false);
   const [relationshipType, setRelationshipType] = useState<string | null>(null);
-  const [lineStyle, setLineStyle] = useState<"solid" | "dotted">("solid");
+  const [defaultLineStyle, setDefaultLineStyle] = useState<"solid" | "dotted">("solid");
+  const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
+  const [isGridMode, setIsGridMode] = useState(false);
+  const [gridPosition, setGridPosition] = useState<{ x: number, y: number } | null>(null);
   
   const canvasRef = useRef<HTMLDivElement>(null);
   
@@ -178,8 +202,8 @@ const TreeCanvas = () => {
   
   const nodePositions = getNodePositions();
   
-  const getRelationshipLines = () => {
-    const lines = [];
+  const getRelationshipLines = (): Line[] => {
+    const lines: Line[] = [];
     const people = selectedTree?.people || {};
     
     for (const id in people) {
@@ -190,7 +214,9 @@ const TreeCanvas = () => {
         lines.push({
           from: nodePositions[person.fatherId],
           to: nodePositions[id],
-          type: 'parent-child'
+          type: 'parent-child',
+          id: `father-${person.fatherId}-to-${id}`,
+          style: defaultLineStyle
         });
       }
       
@@ -199,7 +225,9 @@ const TreeCanvas = () => {
         lines.push({
           from: nodePositions[person.motherId],
           to: nodePositions[id],
-          type: 'parent-child'
+          type: 'parent-child',
+          id: `mother-${person.motherId}-to-${id}`,
+          style: defaultLineStyle
         });
       }
       
@@ -208,7 +236,9 @@ const TreeCanvas = () => {
           lines.push({
             from: nodePositions[id],
             to: nodePositions[spouseId],
-            type: 'spouse'
+            type: 'spouse',
+            id: `spouse-${id}-to-${spouseId}`,
+            style: defaultLineStyle
           });
         }
       }
@@ -218,7 +248,9 @@ const TreeCanvas = () => {
           lines.push({
             from: nodePositions[id],
             to: nodePositions[siblingId],
-            type: 'sibling'
+            type: 'sibling',
+            id: `sibling-${id}-to-${siblingId}`,
+            style: defaultLineStyle
           });
         }
       }
@@ -227,7 +259,22 @@ const TreeCanvas = () => {
     return lines;
   };
   
-  const relationshipLines = getRelationshipLines();
+  const [relationshipLines, setRelationshipLines] = useState<Line[]>([]);
+  
+  useEffect(() => {
+    const lines = getRelationshipLines();
+    setRelationshipLines(lines);
+  }, [selectedTree, defaultLineStyle, nodePositions]);
+  
+  const toggleLineStyle = (lineId: string) => {
+    setRelationshipLines(prev => 
+      prev.map(line => 
+        line.id === lineId 
+          ? { ...line, style: line.style === 'solid' ? 'dotted' : 'solid' } 
+          : line
+      )
+    );
+  };
   
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -271,16 +318,58 @@ const TreeCanvas = () => {
     setShowAddModal(false);
     setRelationshipType(null);
   };
+
+  const handleLineClick = (e: React.MouseEvent, lineId: string) => {
+    e.stopPropagation();
+    setSelectedLineId(lineId === selectedLineId ? null : lineId);
+  };
+
+  const handleGridModeToggle = () => {
+    setIsGridMode(!isGridMode);
+    setSelectedLineId(null);
+  };
+
+  const handleGridClick = (e: React.MouseEvent) => {
+    if (!isGridMode) return;
+    
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    // Calculate position in the grid (snap to 100px grid)
+    const x = Math.round((e.clientX - rect.left - position.x) / 100) * 100;
+    const y = Math.round((e.clientY - rect.top - position.y) / 100) * 100;
+    
+    setGridPosition({ x, y });
+    handleAddPerson('root');
+  };
+
+  // These functions would be implemented fully in a production app
+  const handleExportGedcom = () => {
+    toast.info("GEDCOM export would be implemented here");
+  };
+  
+  const handleImportGedcom = () => {
+    toast.info("GEDCOM import would be implemented here");
+  };
+  
+  const handlePrintTree = () => {
+    toast.info("Print functionality would be implemented here");
+  };
+  
+  const handleShareTree = () => {
+    toast.info("Sharing functionality would be implemented here");
+  };
   
   return (
     <div className="relative h-full w-full">
       <div 
         ref={canvasRef}
-        className="family-canvas w-full h-full cursor-grab active:cursor-grabbing"
+        className={`family-canvas w-full h-full ${isGridMode ? 'cursor-cell' : 'cursor-grab active:cursor-grabbing'}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onClick={isGridMode ? handleGridClick : undefined}
       >
         <div 
           className="absolute inset-0 transform"
@@ -289,19 +378,67 @@ const TreeCanvas = () => {
             transformOrigin: 'center'
           }}
         >
-          <svg className="absolute inset-0 w-full h-full pointer-events-none">
-            {relationshipLines.map((line, index) => (
-              <line
-                key={`line-${index}`}
-                x1={line.from.x}
-                y1={line.from.y}
-                x2={line.to.x}
-                y2={line.to.y}
-                stroke={line.type === 'spouse' ? '#9E86ED' : '#555555'}
-                strokeWidth={2}
-                strokeDasharray={lineStyle === 'dotted' ? '5,5' : 'none'}
-              />
-            ))}
+          {isGridMode && (
+            <div className="absolute inset-0 pointer-events-none">
+              <svg width="100%" height="100%" className="absolute inset-0">
+                <defs>
+                  <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+                    <path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(100, 100, 100, 0.2)" strokeWidth="1"/>
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid)" />
+              </svg>
+            </div>
+          )}
+          
+          <svg className="absolute inset-0 w-full h-full">
+            {relationshipLines.map((line) => {
+              const isSelected = selectedLineId === line.id;
+              const strokeColor = line.type === 'spouse' ? '#9E86ED' : '#555555';
+              const strokeWidth = isSelected ? 4 : 2;
+              
+              return (
+                <g key={line.id}>
+                  <line
+                    x1={line.from.x}
+                    y1={line.from.y}
+                    x2={line.to.x}
+                    y2={line.to.y}
+                    stroke={strokeColor}
+                    strokeWidth={strokeWidth}
+                    strokeDasharray={line.style === 'dotted' ? '5,5' : 'none'}
+                    className="cursor-pointer"
+                    onClick={(e) => handleLineClick(e, line.id)}
+                  />
+                  {isSelected && (
+                    <g>
+                      <circle 
+                        cx={(line.from.x + line.to.x) / 2} 
+                        cy={(line.from.y + line.to.y) / 2} 
+                        r="15" 
+                        fill="white" 
+                        stroke={strokeColor}
+                      />
+                      <g transform={`translate(${(line.from.x + line.to.x) / 2 - 6}, ${(line.from.y + line.to.y) / 2 - 6})`}>
+                        {line.style === 'solid' ? (
+                          <SeparatorHorizontal 
+                            size={12} 
+                            className="cursor-pointer" 
+                            onClick={() => toggleLineStyle(line.id)}
+                          />
+                        ) : (
+                          <Minus 
+                            size={12} 
+                            className="cursor-pointer" 
+                            onClick={() => toggleLineStyle(line.id)}
+                          />
+                        )}
+                      </g>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
           </svg>
           
           {selectedTree && Object.values(selectedTree.people).map(person => (
@@ -326,22 +463,47 @@ const TreeCanvas = () => {
         <Button variant="outline" size="icon" onClick={handleResetView} title={t('Reset View')}>
           <HomeIcon size={18} />
         </Button>
-        <div className="h-px w-full bg-gray-300 my-1"></div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1"
-          onClick={() => handleAddPerson('root')}
-          disabled={!!selectedTree?.rootPersonId}
-        >
-          <UserPlus size={16} />
-          <span>{t('Add First Person')}</span>
-        </Button>
       </div>
       
-      <div className="absolute top-4 right-4 bg-white p-2 rounded-lg shadow-md border border-gray-200 z-10">
-        <div className="text-xs font-medium mb-1 text-gray-500">{t('Line Style')}</div>
-        <ToggleGroup type="single" value={lineStyle} onValueChange={(value) => value && setLineStyle(value as 'solid' | 'dotted')}>
+      <div className="absolute top-4 right-4 bg-white p-2 rounded-lg shadow-md border border-gray-200 flex flex-col gap-2 z-10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" title={t('Tools')}>
+              <MoreVertical size={18} />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={handleImportGedcom}>
+              <Upload size={16} className="mr-2" />
+              {t('Import')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportGedcom}>
+              <Download size={16} className="mr-2" />
+              {t('Export')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handlePrintTree}>
+              <Printer size={16} className="mr-2" />
+              {t('Print')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleShareTree}>
+              <Share2 size={16} className="mr-2" />
+              {t('Share')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        
+        <Button 
+          variant={isGridMode ? "default" : "outline"} 
+          size="icon" 
+          onClick={handleGridModeToggle}
+          title={isGridMode ? t('Exit Add Mode') : t('Add Person')}
+        >
+          <Plus size={18} />
+        </Button>
+        
+        <div className="h-px w-full bg-gray-300 my-1"></div>
+        
+        <ToggleGroup type="single" value={defaultLineStyle} onValueChange={(value) => value && setDefaultLineStyle(value as 'solid' | 'dotted')}>
           <ToggleGroupItem value="solid" title={t('Solid Lines')}>
             <Minus size={16} />
           </ToggleGroupItem>
@@ -351,8 +513,8 @@ const TreeCanvas = () => {
         </ToggleGroup>
       </div>
       
-      {selectedPerson && (
-        <div className="absolute right-4 top-20 bg-white p-3 rounded-lg shadow-md border border-gray-200 flex flex-col gap-2 z-10">
+      {selectedPerson && !isGridMode && (
+        <div className="absolute right-4 top-40 bg-white p-3 rounded-lg shadow-md border border-gray-200 flex flex-col gap-2 z-10">
           <h3 className="font-semibold text-sm text-asli-navy">
             {t('Add Relative to')} {selectedPerson.firstName}
           </h3>
