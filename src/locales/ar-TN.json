@@ -1,50 +1,34 @@
 
 {
-  "header": {
-    "accountSettings": "إعدادات الحساب",
-    "logout": "تسجيل الخروج"
-  },
-  "treeCanvas": {
-    "addFirstPerson": "إضافة أول شخص",
-    "addRelative": "إضافة قريب إلى {{name}}",
-    "father": "الأب",
-    "mother": "الأم",
-    "spouse": "الزوج/الزوجة",
-    "child": "الطفل",
-    "sibling": "الأخ/الأخت"
-  },
-  "personModal": {
-    "addPerson": "إضافة شخص",
-    "firstName": "الاسم الأول",
-    "lastName": "اللقب",
-    "maidenName": "اسم العائلة قبل الزواج",
-    "addMaidenName": "إضافة اسم العائلة قبل الزواج؟",
-    "gender": "الجنس",
-    "male": "ذكر",
-    "female": "أنثى",
-    "other": "آخر",
-    "occupation": "المهنة",
-    "birthDate": "تاريخ الميلاد",
-    "birthPlace": "مكان الميلاد",
-    "recordDeath": "تسجيل معلومات الوفاة؟",
-    "deathDate": "تاريخ الوفاة",
-    "deathPlace": "مكان الوفاة",
-    "notes": "ملاحظات",
-    "save": "حفظ الشخص",
-    "cancel": "إلغاء",
-    "requiredField": "هذا الحقل مطلوب"
-  },
-  "dashboard": {
-    "noTreeSelected": "لم يتم اختيار شجرة",
-    "selectTree": "اختر شجرة من الشريط الجانبي أو أنشئ واحدة جديدة للبدء.",
-    "import": "استيراد",
-    "export": "تصدير",
-    "print": "طباعة",
-    "share": "مشاركة"
-  },
-  "actions": {
-    "zoomIn": "تكبير",
-    "zoomOut": "تصغير",
-    "resetView": "إعادة ضبط العرض"
+  "translation": {
+    "Login": "تسجيل الدخول",
+    "Register": "تسجيل",
+    "Email": "البريد الإلكتروني",
+    "Password": "كلمة المرور",
+    "Sign In": "تسجيل الدخول",
+    "Sign Up": "إنشاء حساب",
+    "Logout": "تسجيل الخروج",
+    "Account Settings": "إعدادات الحساب",
+    "My Family Trees": "شجرات عائلتي",
+    "Add First Person": "إضافة أول شخص",
+    "New Family Tree": "شجرة عائلة جديدة",
+    "No Tree Selected": "لم يتم اختيار شجرة",
+    "Select a tree from the sidebar or create a new one to get started.": "اختر شجرة من الشريط الجانبي أو أنشئ واحدة جديدة للبدء",
+    "Import": "استيراد",
+    "Export": "تصدير",
+    "Print": "طباعة",
+    "Share": "مشاركة",
+    "Zoom In": "تكبير",
+    "Zoom Out": "تصغير",
+    "Reset View": "إعادة ضبط العرض",
+    "Add Relative to": "إضافة قريب إلى",
+    "Father": "الأب",
+    "Mother": "الأم",
+    "Spouse": "الزوج/ة",
+    "Child": "الطفل",
+    "Sibling": "الشقيق/ة",
+    "Line Style": "نمط الخط",
+    "Solid Lines": "خطوط متصلة",
+    "Dotted Lines": "خطوط متقطعة"
   }
 }

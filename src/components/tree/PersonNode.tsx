@@ -28,29 +28,30 @@ const PersonNode = ({ person, isSelected, onClick, position }: PersonNodeProps) 
   
   // Gender-based styling
   const genderClass = 
-    gender === "male" ? "border-blue-200 bg-blue-50" : 
-    gender === "female" ? "border-pink-200 bg-pink-50" : 
-    "border-gray-200 bg-gray-50";
+    gender === "male" ? "border-blue-400 bg-blue-50" : 
+    gender === "female" ? "border-pink-400 bg-pink-50" : 
+    "border-gray-300 bg-gray-50";
   
   return (
     <div 
       className={cn(
-        "person-node absolute",
+        "person-node absolute p-3 border-2 rounded-md shadow-sm transition-shadow",
         genderClass,
-        isSelected && "selected"
+        isSelected ? "ring-2 ring-asli-navy ring-offset-2" : ""
       )}
       style={{ 
         left: `${position.x}px`, 
         top: `${position.y}px`,
-        transform: "translate(-50%, -50%)"
+        transform: "translate(-50%, -50%)",
+        minWidth: "120px",
       }}
       onClick={onClick}
     >
-      <h3 className="font-semibold text-asli-navy">
+      <h3 className="font-semibold text-asli-navy text-center">
         {firstName} {lastName}
       </h3>
       {yearsText && (
-        <p className="text-xs text-asli-gray mt-1">{yearsText}</p>
+        <p className="text-xs text-asli-gray mt-1 text-center">{yearsText}</p>
       )}
     </div>
   );

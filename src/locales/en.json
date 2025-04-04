@@ -1,50 +1,34 @@
 
 {
-  "header": {
-    "accountSettings": "Account Settings",
-    "logout": "Log Out"
-  },
-  "treeCanvas": {
-    "addFirstPerson": "Add First Person",
-    "addRelative": "Add Relative to {{name}}",
-    "father": "Father",
-    "mother": "Mother",
-    "spouse": "Spouse",
-    "child": "Child",
-    "sibling": "Sibling"
-  },
-  "personModal": {
-    "addPerson": "Add Person",
-    "firstName": "First Name",
-    "lastName": "Last Name",
-    "maidenName": "Maiden Name",
-    "addMaidenName": "Add Maiden Name?",
-    "gender": "Gender",
-    "male": "Male",
-    "female": "Female",
-    "other": "Other",
-    "occupation": "Occupation",
-    "birthDate": "Birth Date",
-    "birthPlace": "Birth Place",
-    "recordDeath": "Record Death Information?",
-    "deathDate": "Death Date",
-    "deathPlace": "Death Place",
-    "notes": "Notes",
-    "save": "Save Person",
-    "cancel": "Cancel",
-    "requiredField": "This field is required"
-  },
-  "dashboard": {
-    "noTreeSelected": "No Tree Selected",
-    "selectTree": "Select a tree from the sidebar or create a new one to get started.",
-    "import": "Import",
-    "export": "Export",
-    "print": "Print",
-    "share": "Share"
-  },
-  "actions": {
-    "zoomIn": "Zoom In",
-    "zoomOut": "Zoom Out",
-    "resetView": "Reset View"
+  "translation": {
+    "Login": "Login",
+    "Register": "Register",
+    "Email": "Email",
+    "Password": "Password",
+    "Sign In": "Sign In",
+    "Sign Up": "Sign Up",
+    "Logout": "Logout",
+    "Account Settings": "Account Settings",
+    "My Family Trees": "My Family Trees",
+    "Add First Person": "Add First Person",
+    "New Family Tree": "New Family Tree",
+    "No Tree Selected": "No Tree Selected",
+    "Select a tree from the sidebar or create a new one to get started.": "Select a tree from the sidebar or create a new one to get started.",
+    "Import": "Import",
+    "Export": "Export",
+    "Print": "Print",
+    "Share": "Share",
+    "Zoom In": "Zoom In",
+    "Zoom Out": "Zoom Out",
+    "Reset View": "Reset View",
+    "Add Relative to": "Add Relative to",
+    "Father": "Father",
+    "Mother": "Mother",
+    "Spouse": "Spouse",
+    "Child": "Child",
+    "Sibling": "Sibling",
+    "Line Style": "Line Style",
+    "Solid Lines": "Solid Lines",
+    "Dotted Lines": "Dotted Lines"
   }
 }
