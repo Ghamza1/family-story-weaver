@@ -18,6 +18,15 @@ const Dashboard = () => {
     }
   }, [navigate]);
   
+  // Set document direction based on language
+  useEffect(() => {
+    document.documentElement.dir = i18n.language === 'ar-TN' ? 'rtl' : 'ltr';
+    
+    return () => {
+      document.documentElement.dir = 'ltr'; // Reset on unmount
+    };
+  }, [i18n.language]);
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

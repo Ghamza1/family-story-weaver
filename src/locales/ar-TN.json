@@ -12,8 +12,8 @@
     "My Family Trees": "شجرات عائلتي",
     "Add First Person": "إضافة أول شخص",
     "New Family Tree": "شجرة عائلة جديدة",
-    "No Tree Selected": "لم يتم اختيار شجرة",
-    "Select a tree from the sidebar or create a new one to get started.": "اختر شجرة من الشريط الجانبي أو أنشئ واحدة جديدة للبدء",
+    "No Tree Selected": "ما اخترت حتى شجرة",
+    "Select a tree from the sidebar or create a new one to get started.": "اختار شجرة من القائمة الجانبية ولا انشي واحدة جديدة باش تبدا",
     "Import": "استيراد",
     "Export": "تصدير",
     "Print": "طباعة",
@@ -21,7 +21,7 @@
     "Zoom In": "تكبير",
     "Zoom Out": "تصغير",
     "Reset View": "إعادة ضبط العرض",
-    "Add Relative to": "إضافة قريب إلى",
+    "Add Relative to": "أضف قريب لـ",
     "Father": "الأب",
     "Mother": "الأم",
     "Spouse": "الزوج/ة",
@@ -61,6 +61,8 @@
     "GEDCOM export would be implemented here": "سيتم تنفيذ تصدير GEDCOM هنا",
     "GEDCOM import would be implemented here": "سيتم تنفيذ استيراد GEDCOM هنا",
     "Print functionality would be implemented here": "سيتم تنفيذ وظيفة الطباعة هنا",
-    "Sharing functionality would be implemented here": "سيتم تنفيذ وظيفة المشاركة هنا"
+    "Sharing functionality would be implemented here": "سيتم تنفيذ وظيفة المشاركة هنا",
+    "Undo": "تراجع",
+    "Redo": "إعادة"
   }
 }

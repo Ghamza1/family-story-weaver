@@ -1,58 +1,50 @@
 
-import { cn } from "@/lib/utils";
+import React from "react";
 import { Person } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface PersonNodeProps {
   person: Person;
-  isSelected: boolean;
-  onClick: () => void;
+  isSelected?: boolean;
   position: { x: number; y: number };
+  onClick: (e: React.MouseEvent) => void;
+  onMouseDown: (e: React.MouseEvent) => void;
 }
 
-const PersonNode = ({ person, isSelected, onClick, position }: PersonNodeProps) => {
-  const { firstName, lastName, birthDate, deathDate, gender } = person;
+const PersonNode: React.FC<PersonNodeProps> = ({ 
+  person, 
+  isSelected = false,
+  position,
+  onClick,
+  onMouseDown
+}) => {
+  const { firstName, lastName, gender } = person;
   
-  // Format date display
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "";
-    try {
-      return new Date(dateStr).getFullYear().toString();
-    } catch {
-      return dateStr;
-    }
-  };
+  const fullName = `${firstName} ${lastName}`;
   
-  const birthYear = formatDate(birthDate);
-  const deathYear = formatDate(deathDate);
-  const yearsText = birthYear || deathYear ? `(${birthYear}${deathYear ? ` - ${deathYear}` : ""})` : "";
-  
-  // Gender-based styling
-  const genderClass = 
-    gender === "male" ? "border-blue-400 bg-blue-50" : 
-    gender === "female" ? "border-pink-400 bg-pink-50" : 
-    "border-gray-300 bg-gray-50";
+  // Gender-specific styling
+  const genderClass = gender === "male" 
+    ? "bg-blue-50 border-blue-200" 
+    : gender === "female" 
+      ? "bg-pink-50 border-pink-200" 
+      : "bg-gray-50 border-gray-200";
   
   return (
     <div 
       className={cn(
-        "person-node absolute p-3 border-2 rounded-md shadow-sm transition-shadow",
+        "absolute person-node w-40 px-2 py-1 rounded-md border text-center cursor-pointer transition-shadow",
         genderClass,
-        isSelected ? "ring-2 ring-asli-navy ring-offset-2" : ""
+        isSelected && "ring-2 ring-offset-1 ring-purple-500 shadow-lg"
       )}
-      style={{ 
-        left: `${position.x}px`, 
-        top: `${position.y}px`,
-        transform: "translate(-50%, -50%)",
-        minWidth: "120px",
+      style={{
+        left: position.x - 80, // Center horizontally (half of width)
+        top: position.y - 15,  // Center vertically (half of height)
+        touchAction: "none",   // Important for proper dragging
       }}
       onClick={onClick}
+      onMouseDown={onMouseDown}
     >
-      <h3 className="font-semibold text-asli-navy text-center">
-        {firstName} {lastName}
-      </h3>
-      {yearsText && (
-        <p className="text-xs text-asli-gray mt-1 text-center">{yearsText}</p>
-      )}
+      <div className="text-sm font-medium truncate">{fullName}</div>
     </div>
   );
 };

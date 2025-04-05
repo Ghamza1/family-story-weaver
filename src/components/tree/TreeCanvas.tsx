@@ -16,7 +16,8 @@ import {
   Upload,
   Printer,
   Share2,
-  Trash2
+  Undo,
+  Redo
 } from "lucide-react";
 import { useFamilyTree } from "@/context/FamilyTreeContext";
 import AddPersonModal from "./AddPersonModal";
@@ -51,6 +52,13 @@ interface FamilyConnection {
   style: "solid" | "dotted";
 }
 
+// Simple action for undo/redo functionality
+interface CanvasAction {
+  type: 'MOVE_PERSON' | 'CHANGE_LINE_STYLE';
+  payload: any;
+  undo: () => void;
+}
+
 const TreeCanvas = () => {
   const { t } = useTranslation();
   const { selectedTree, selectedPerson, setSelectedPerson, removePerson, updatePerson } = useFamilyTree();
@@ -73,10 +81,19 @@ const TreeCanvas = () => {
   const [customNodePositions, setCustomNodePositions] = useState<Record<string, { x: number; y: number }>>({});
   const [familyConnections, setFamilyConnections] = useState<FamilyConnection[]>([]);
   
+  // For undo/redo functionality
+  const [actionHistory, setActionHistory] = useState<CanvasAction[]>([]);
+  const [futureActions, setFutureActions] = useState<CanvasAction[]>([]);
+  
   const canvasRef = useRef<HTMLDivElement>(null);
   const lastClickTime = useRef<number>(0);
   const clickTimer = useRef<NodeJS.Timeout | null>(null);
   const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  
+  // For drag and drop functionality
+  const isDraggingPerson = useRef(false);
+  const personDraggedId = useRef<string | null>(null);
+  const personStartPos = useRef<{ x: number, y: number } | null>(null);
   
   const getNodePositions = () => {
     const positions: Record<string, { x: number; y: number }> = {};
@@ -369,11 +386,75 @@ const TreeCanvas = () => {
     setFamilyConnections(connections);
   }, [selectedTree, defaultLineStyle, nodePositions]);
   
+  // Record an action for undo/redo
+  const recordAction = (action: CanvasAction) => {
+    setActionHistory(prev => [...prev, action]);
+    // Clear future actions when a new action is performed
+    setFutureActions([]);
+  };
+  
+  // Undo the last action
+  const handleUndo = () => {
+    if (actionHistory.length === 0) return;
+    
+    const lastAction = actionHistory[actionHistory.length - 1];
+    lastAction.undo();
+    
+    setActionHistory(prev => prev.slice(0, -1));
+    setFutureActions(prev => [lastAction, ...prev]);
+  };
+  
+  // Redo the last undone action
+  const handleRedo = () => {
+    if (futureActions.length === 0) return;
+    
+    const nextAction = futureActions[0];
+    
+    if (nextAction.type === 'MOVE_PERSON') {
+      const { personId, newPosition } = nextAction.payload;
+      setCustomNodePositions(prev => ({
+        ...prev,
+        [personId]: newPosition
+      }));
+    } else if (nextAction.type === 'CHANGE_LINE_STYLE') {
+      const { lineId, newStyle } = nextAction.payload;
+      setFamilyConnections(prev => 
+        prev.map(connection => 
+          connection.id === lineId 
+            ? { ...connection, style: newStyle } 
+            : connection
+        )
+      );
+    }
+    
+    setFutureActions(prev => prev.slice(1));
+    setActionHistory(prev => [...prev, nextAction]);
+  };
+  
   const toggleLineStyle = (lineId: string) => {
+    const connection = familyConnections.find(conn => conn.id === lineId);
+    if (!connection) return;
+    
+    const oldStyle = connection.style;
+    const newStyle = oldStyle === 'solid' ? 'dotted' : 'solid';
+    
+    // Record the action for undo/redo
+    recordAction({
+      type: 'CHANGE_LINE_STYLE',
+      payload: { lineId, newStyle, oldStyle },
+      undo: () => {
+        setFamilyConnections(prev => 
+          prev.map(conn => 
+            conn.id === lineId ? { ...conn, style: oldStyle } : conn
+          )
+        );
+      }
+    });
+    
     setFamilyConnections(prev => 
       prev.map(connection => 
         connection.id === lineId 
-          ? { ...connection, style: connection.style === 'solid' ? 'dotted' : 'solid' } 
+          ? { ...connection, style: newStyle } 
           : connection
       )
     );
@@ -407,6 +488,21 @@ const TreeCanvas = () => {
       return;
     }
     
+    // For drag and drop functionality
+    if (isDraggingPerson.current && personDraggedId.current) {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const x = (e.clientX - rect.left - position.x) / scale;
+      const y = (e.clientY - rect.top - position.y) / scale;
+      
+      setCustomNodePositions(prev => ({
+        ...prev,
+        [personDraggedId.current!]: { x, y }
+      }));
+      return;
+    }
+    
     if (!isDragging) return;
     
     setPosition({
@@ -418,7 +514,53 @@ const TreeCanvas = () => {
   const handleMouseUp = () => {
     setIsDragging(false);
     
+    // For person drag and drop
+    if (isDraggingPerson.current && personDraggedId.current && personStartPos.current) {
+      const currentPos = customNodePositions[personDraggedId.current];
+      
+      // Record the action for undo/redo
+      recordAction({
+        type: 'MOVE_PERSON',
+        payload: { 
+          personId: personDraggedId.current, 
+          oldPosition: personStartPos.current,
+          newPosition: currentPos
+        },
+        undo: () => {
+          setCustomNodePositions(prev => ({
+            ...prev,
+            [personDraggedId.current!]: personStartPos.current!
+          }));
+        }
+      });
+      
+      isDraggingPerson.current = false;
+      personDraggedId.current = null;
+      personStartPos.current = null;
+    }
+    
     if (isMovingPerson) {
+      if (personBeingMoved) {
+        // Record the move action for undo/redo
+        const oldPosition = nodePositions[personBeingMoved.id] || { x: 0, y: 0 };
+        const newPosition = customNodePositions[personBeingMoved.id];
+        
+        recordAction({
+          type: 'MOVE_PERSON',
+          payload: { 
+            personId: personBeingMoved.id, 
+            oldPosition,
+            newPosition
+          },
+          undo: () => {
+            setCustomNodePositions(prev => ({
+              ...prev,
+              [personBeingMoved.id]: oldPosition
+            }));
+          }
+        });
+      }
+      
       setIsMovingPerson(false);
       setPersonBeingMoved(null);
     }
@@ -456,7 +598,15 @@ const TreeCanvas = () => {
     setPosition({ x: 0, y: 0 });
   };
   
-  const handlePersonClick = (person: Person) => {
+  // Start person drag
+  const handlePersonDragStart = (e: React.MouseEvent, person: Person) => {
+    e.stopPropagation();
+    isDraggingPerson.current = true;
+    personDraggedId.current = person.id;
+    personStartPos.current = customNodePositions[person.id] || nodePositions[person.id] || { x: 0, y: 0 };
+  };
+  
+  const handlePersonClick = (person: Person, e: React.MouseEvent) => {
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTime.current;
     
@@ -718,8 +868,9 @@ const TreeCanvas = () => {
               key={person.id}
               person={person}
               isSelected={selectedPerson?.id === person.id}
-              onClick={() => handlePersonClick(person)}
+              onClick={(e) => handlePersonClick(person, e)}
               position={nodePositions[person.id] || { x: 0, y: 0 }}
+              onMouseDown={(e) => handlePersonDragStart(e, person)}
             />
           ))}
         </div>
@@ -734,6 +885,12 @@ const TreeCanvas = () => {
         </Button>
         <Button variant="outline" size="icon" onClick={handleResetView} title={t('Reset View')}>
           <HomeIcon size={18} />
+        </Button>
+        <Button variant="outline" size="icon" onClick={handleUndo} title={t('Undo')}>
+          <Undo size={18} />
+        </Button>
+        <Button variant="outline" size="icon" onClick={handleRedo} title={t('Redo')}>
+          <Redo size={18} />
         </Button>
       </div>
       
