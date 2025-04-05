@@ -36,15 +36,13 @@ const AddPersonModal = ({
     firstName: "",
     lastName: relativeTo?.lastName || "",
     maidenName: "",
-    prefix: "",
-    suffix: "",
     gender: relationshipType === "mother" ? "female" : 
             relationshipType === "father" ? "male" : "",
+    occupation: "",
     birthDate: "",
     birthPlace: "",
     deathDate: "",
     deathPlace: "",
-    occupation: "",
     notes: "",
   });
   
@@ -80,6 +78,8 @@ const AddPersonModal = ({
     try {
       addPerson({
         ...formData,
+        prefix: "",  // Adding empty prefix to match the Person type
+        suffix: "",  // Adding empty suffix to match the Person type
         gender: formData.gender as "male" | "female" | "other",
       }, relationshipType, relativeTo?.id);
       
@@ -90,6 +90,8 @@ const AddPersonModal = ({
       toast.error("Failed to add person");
     }
   };
+  
+  const showMaidenName = formData.gender === "female";
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -125,37 +127,17 @@ const AddPersonModal = ({
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="maidenName">Maiden Name</Label>
-              <Input
-                id="maidenName"
-                name="maidenName"
-                value={formData.maidenName}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="prefix">Prefix</Label>
-              <Input
-                id="prefix"
-                name="prefix"
-                placeholder="Mr., Dr., etc."
-                value={formData.prefix}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="suffix">Suffix</Label>
-              <Input
-                id="suffix"
-                name="suffix"
-                placeholder="Jr., Sr., III, etc."
-                value={formData.suffix}
-                onChange={handleChange}
-              />
-            </div>
+            {showMaidenName && (
+              <div className="space-y-2">
+                <Label htmlFor="maidenName">Maiden Name</Label>
+                <Input
+                  id="maidenName"
+                  name="maidenName"
+                  value={formData.maidenName}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label>Gender <span className="text-red-500">*</span></Label>
@@ -177,6 +159,16 @@ const AddPersonModal = ({
                   <Label htmlFor="other">Other</Label>
                 </div>
               </RadioGroup>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="occupation">Occupation</Label>
+              <Input
+                id="occupation"
+                name="occupation"
+                value={formData.occupation}
+                onChange={handleChange}
+              />
             </div>
           </div>
           
@@ -219,16 +211,6 @@ const AddPersonModal = ({
                 id="deathPlace"
                 name="deathPlace"
                 value={formData.deathPlace}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="occupation">Occupation</Label>
-              <Input
-                id="occupation"
-                name="occupation"
-                value={formData.occupation}
                 onChange={handleChange}
               />
             </div>

@@ -8,8 +8,8 @@ import {
   ZoomOut, 
   Move, 
   Home as HomeIcon,
-  Plus,
-  UserPlus,
+  User,
+  Users,
   Minus,
   SeparatorHorizontal,
   MoreVertical,
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useFamilyTree } from "@/context/FamilyTreeContext";
 import AddPersonModal from "./AddPersonModal";
+import PersonDetails from "./PersonDetails";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useTranslation } from "react-i18next";
 import {
@@ -51,8 +52,13 @@ const TreeCanvas = () => {
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null);
   const [isGridMode, setIsGridMode] = useState(false);
   const [gridPosition, setGridPosition] = useState<{ x: number, y: number } | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [detailsPerson, setDetailsPerson] = useState<Person | null>(null);
+  const [showRelativeOptions, setShowRelativeOptions] = useState(false);
   
   const canvasRef = useRef<HTMLDivElement>(null);
+  const lastClickTime = useRef<number>(0);
+  const clickTimer = useRef<NodeJS.Timeout | null>(null);
   
   const getNodePositions = () => {
     const positions: Record<string, { x: number; y: number }> = {};
@@ -296,6 +302,20 @@ const TreeCanvas = () => {
     setIsDragging(false);
   };
   
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY;
+    const scaleChange = 0.1;
+    
+    if (delta < 0) {
+      // Zoom in
+      setScale(prev => Math.min(prev + scaleChange, 2));
+    } else {
+      // Zoom out
+      setScale(prev => Math.max(prev - scaleChange, 0.5));
+    }
+  };
+  
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev + 0.1, 2));
   };
@@ -309,6 +329,30 @@ const TreeCanvas = () => {
     setPosition({ x: 0, y: 0 });
   };
   
+  const handlePersonClick = (person: Person) => {
+    const now = Date.now();
+    const timeSinceLastClick = now - lastClickTime.current;
+    
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+    }
+    
+    if (timeSinceLastClick < 300) {
+      // Double click - show details
+      setDetailsPerson(person);
+      setShowDetailsModal(true);
+      setSelectedPerson(null);
+    } else {
+      // Single click - select person
+      clickTimer.current = setTimeout(() => {
+        setSelectedPerson(person);
+      }, 300);
+    }
+    
+    lastClickTime.current = now;
+  };
+  
   const handleAddPerson = (type: string) => {
     setRelationshipType(type);
     setShowAddModal(true);
@@ -317,6 +361,9 @@ const TreeCanvas = () => {
   const closeAddModal = () => {
     setShowAddModal(false);
     setRelationshipType(null);
+    setIsGridMode(false);
+    setShowRelativeOptions(false);
+    setSelectedPerson(null);
   };
 
   const handleLineClick = (e: React.MouseEvent, lineId: string) => {
@@ -327,6 +374,11 @@ const TreeCanvas = () => {
   const handleGridModeToggle = () => {
     setIsGridMode(!isGridMode);
     setSelectedLineId(null);
+  };
+
+  const toggleRelativeOptions = () => {
+    setShowRelativeOptions(!showRelativeOptions);
+    setIsGridMode(false);
   };
 
   const handleGridClick = (e: React.MouseEvent) => {
@@ -370,6 +422,7 @@ const TreeCanvas = () => {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onClick={isGridMode ? handleGridClick : undefined}
+        onWheel={handleWheel}
       >
         <div 
           className="absolute inset-0 transform"
@@ -446,7 +499,7 @@ const TreeCanvas = () => {
               key={person.id}
               person={person}
               isSelected={selectedPerson?.id === person.id}
-              onClick={() => setSelectedPerson(person)}
+              onClick={() => handlePersonClick(person)}
               position={nodePositions[person.id] || { x: 0, y: 0 }}
             />
           ))}
@@ -498,22 +551,20 @@ const TreeCanvas = () => {
           onClick={handleGridModeToggle}
           title={isGridMode ? t('Exit Add Mode') : t('Add Person')}
         >
-          <Plus size={18} />
+          <User size={18} />
         </Button>
         
-        <div className="h-px w-full bg-gray-300 my-1"></div>
-        
-        <ToggleGroup type="single" value={defaultLineStyle} onValueChange={(value) => value && setDefaultLineStyle(value as 'solid' | 'dotted')}>
-          <ToggleGroupItem value="solid" title={t('Solid Lines')}>
-            <Minus size={16} />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="dotted" title={t('Dotted Lines')}>
-            <SeparatorHorizontal size={16} />
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <Button 
+          variant={showRelativeOptions ? "default" : "outline"} 
+          size="icon" 
+          onClick={toggleRelativeOptions}
+          title={t('Relatives')}
+        >
+          <Users size={18} />
+        </Button>
       </div>
       
-      {selectedPerson && !isGridMode && (
+      {selectedPerson && showRelativeOptions && (
         <div className="absolute right-4 top-40 bg-white p-3 rounded-lg shadow-md border border-gray-200 flex flex-col gap-2 z-10">
           <h3 className="font-semibold text-sm text-asli-navy">
             {t('Add Relative to')} {selectedPerson.firstName}
@@ -556,6 +607,12 @@ const TreeCanvas = () => {
           relativeTo={selectedPerson} 
         />
       )}
+      
+      <PersonDetails
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        person={detailsPerson}
+      />
     </div>
   );
 };
