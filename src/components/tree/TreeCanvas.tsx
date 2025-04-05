@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { 
   ZoomIn, 
   ZoomOut, 
-  Move, 
   Home as HomeIcon,
   User,
   Users,
@@ -41,6 +40,17 @@ interface Line {
   style: "solid" | "dotted";
 }
 
+interface FamilyConnection {
+  id: string;
+  type: 'spouse' | 'parent-child' | 'sibling';
+  fromId: string;
+  toId: string;
+  fromPos: { x: number; y: number };
+  toPos: { x: number; y: number };
+  controlPoints?: { x: number; y: number }[];
+  style: "solid" | "dotted";
+}
+
 const TreeCanvas = () => {
   const { t } = useTranslation();
   const { selectedTree, selectedPerson, setSelectedPerson, removePerson, updatePerson } = useFamilyTree();
@@ -61,6 +71,7 @@ const TreeCanvas = () => {
   const [isMovingPerson, setIsMovingPerson] = useState(false);
   const [personBeingMoved, setPersonBeingMoved] = useState<Person | null>(null);
   const [customNodePositions, setCustomNodePositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [familyConnections, setFamilyConnections] = useState<FamilyConnection[]>([]);
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const lastClickTime = useRef<number>(0);
@@ -224,77 +235,146 @@ const TreeCanvas = () => {
   };
   
   const nodePositions = getNodePositions();
-  
-  const getRelationshipLines = (): Line[] => {
-    const lines: Line[] = [];
+
+  // Generate advanced family connections
+  const generateFamilyConnections = () => {
+    const connections: FamilyConnection[] = [];
     const people = selectedTree?.people || {};
     
-    for (const id in people) {
-      const person = people[id];
+    // Process spouse connections - horizontal line
+    for (const personId in people) {
+      const person = people[personId];
       
-      if (person.fatherId && people[person.fatherId] && 
-          nodePositions[id] && nodePositions[person.fatherId]) {
-        lines.push({
-          from: nodePositions[person.fatherId],
-          to: nodePositions[id],
-          type: 'parent-child',
-          id: `father-${person.fatherId}-to-${id}`,
-          style: defaultLineStyle
-        });
-      }
-      
-      if (person.motherId && people[person.motherId] && 
-          nodePositions[id] && nodePositions[person.motherId]) {
-        lines.push({
-          from: nodePositions[person.motherId],
-          to: nodePositions[id],
-          type: 'parent-child',
-          id: `mother-${person.motherId}-to-${id}`,
-          style: defaultLineStyle
-        });
-      }
-      
+      // Process spouse connections
       for (const spouseId of person.spouseIds) {
-        if (id < spouseId && nodePositions[id] && nodePositions[spouseId]) {
-          lines.push({
-            from: nodePositions[id],
-            to: nodePositions[spouseId],
+        // Only create one connection per spouse pair
+        if (personId < spouseId && 
+            nodePositions[personId] && 
+            nodePositions[spouseId]) {
+          const connectionId = `spouse-${personId}-to-${spouseId}`;
+          
+          // Check if this connection already exists with custom style
+          const existingConnection = familyConnections.find(conn => conn.id === connectionId);
+          const style = existingConnection ? existingConnection.style : defaultLineStyle;
+          
+          connections.push({
+            id: connectionId,
             type: 'spouse',
-            id: `spouse-${id}-to-${spouseId}`,
-            style: defaultLineStyle
+            fromId: personId,
+            toId: spouseId,
+            fromPos: nodePositions[personId],
+            toPos: nodePositions[spouseId],
+            style
           });
         }
       }
       
+      // Process parent-child connections - vertical line from parent to child
+      if (person.fatherId && people[person.fatherId] && 
+          nodePositions[personId] && nodePositions[person.fatherId]) {
+        const connectionId = `father-${person.fatherId}-to-${personId}`;
+        
+        // Check if this connection already exists with custom style
+        const existingConnection = familyConnections.find(conn => conn.id === connectionId);
+        const style = existingConnection ? existingConnection.style : defaultLineStyle;
+        
+        // Vertical line connection
+        connections.push({
+          id: connectionId,
+          type: 'parent-child',
+          fromId: person.fatherId,
+          toId: personId,
+          fromPos: nodePositions[person.fatherId],
+          toPos: nodePositions[personId],
+          controlPoints: [
+            { 
+              x: nodePositions[person.fatherId].x, 
+              y: nodePositions[person.fatherId].y + 40 
+            },
+            { 
+              x: nodePositions[personId].x, 
+              y: nodePositions[person.fatherId].y + 40 
+            }
+          ],
+          style
+        });
+      }
+      
+      if (person.motherId && people[person.motherId] && 
+          nodePositions[personId] && nodePositions[person.motherId]) {
+        const connectionId = `mother-${person.motherId}-to-${personId}`;
+        
+        // Check if this connection already exists with custom style
+        const existingConnection = familyConnections.find(conn => conn.id === connectionId);
+        const style = existingConnection ? existingConnection.style : defaultLineStyle;
+        
+        // Vertical line connection
+        connections.push({
+          id: connectionId,
+          type: 'parent-child',
+          fromId: person.motherId,
+          toId: personId,
+          fromPos: nodePositions[person.motherId],
+          toPos: nodePositions[personId],
+          controlPoints: [
+            { 
+              x: nodePositions[person.motherId].x, 
+              y: nodePositions[person.motherId].y + 40 
+            },
+            { 
+              x: nodePositions[personId].x, 
+              y: nodePositions[person.motherId].y + 40 
+            }
+          ],
+          style
+        });
+      }
+      
+      // Process sibling connections
       for (const siblingId of person.siblingIds) {
-        if (id < siblingId && nodePositions[id] && nodePositions[siblingId]) {
-          lines.push({
-            from: nodePositions[id],
-            to: nodePositions[siblingId],
+        if (personId < siblingId && 
+            nodePositions[personId] && 
+            nodePositions[siblingId]) {
+          const connectionId = `sibling-${personId}-to-${siblingId}`;
+          
+          // Check if this connection already exists with custom style
+          const existingConnection = familyConnections.find(conn => conn.id === connectionId);
+          const style = existingConnection ? existingConnection.style : defaultLineStyle;
+          
+          // Create sibling bar connection
+          const siblingBarY = Math.min(nodePositions[personId].y, nodePositions[siblingId].y) - 30;
+          
+          connections.push({
+            id: connectionId,
             type: 'sibling',
-            id: `sibling-${id}-to-${siblingId}`,
-            style: defaultLineStyle
+            fromId: personId,
+            toId: siblingId,
+            fromPos: nodePositions[personId],
+            toPos: nodePositions[siblingId],
+            controlPoints: [
+              { x: nodePositions[personId].x, y: siblingBarY },
+              { x: nodePositions[siblingId].x, y: siblingBarY }
+            ],
+            style
           });
         }
       }
     }
     
-    return lines;
+    return connections;
   };
   
-  const [relationshipLines, setRelationshipLines] = useState<Line[]>([]);
-  
   useEffect(() => {
-    const lines = getRelationshipLines();
-    setRelationshipLines(lines);
+    const connections = generateFamilyConnections();
+    setFamilyConnections(connections);
   }, [selectedTree, defaultLineStyle, nodePositions]);
   
   const toggleLineStyle = (lineId: string) => {
-    setRelationshipLines(prev => 
-      prev.map(line => 
-        line.id === lineId 
-          ? { ...line, style: line.style === 'solid' ? 'dotted' : 'solid' } 
-          : line
+    setFamilyConnections(prev => 
+      prev.map(connection => 
+        connection.id === lineId 
+          ? { ...connection, style: connection.style === 'solid' ? 'dotted' : 'solid' } 
+          : connection
       )
     );
   };
@@ -411,6 +491,8 @@ const TreeCanvas = () => {
       // Single click - select person
       clickTimer.current = setTimeout(() => {
         setSelectedPerson(person);
+        // Auto-deselect other modes to avoid confusion
+        setIsGridMode(false);
       }, 300);
     }
     
@@ -439,6 +521,7 @@ const TreeCanvas = () => {
     setIsGridMode(!isGridMode);
     setSelectedLineId(null);
     setShowRelativeOptions(false);
+    setSelectedPerson(null);
   };
 
   const toggleRelativeOptions = () => {
@@ -498,6 +581,102 @@ const TreeCanvas = () => {
     toast.info(t("Sharing functionality would be implemented here"));
   };
   
+  // Render a connection line based on its type
+  const renderConnectionLine = (connection: FamilyConnection) => {
+    const { id, type, fromPos, toPos, controlPoints, style } = connection;
+    const isSelected = selectedLineId === id;
+    const strokeColor = type === 'spouse' ? '#9E86ED' : '#555555';
+    const strokeWidth = isSelected ? 4 : 2;
+    
+    // Line style toggle icon position calculation
+    const iconPos = {
+      x: 0,
+      y: 0
+    };
+    
+    if (type === 'spouse') {
+      // For spouse lines (horizontal), place icon above the midpoint
+      iconPos.x = (fromPos.x + toPos.x) / 2;
+      iconPos.y = (fromPos.y + toPos.y) / 2 - 20;
+    } else if (type === 'parent-child' && controlPoints) {
+      // For parent-child lines, place icon on the horizontal bar
+      iconPos.x = (controlPoints[0].x + controlPoints[1].x) / 2;
+      iconPos.y = controlPoints[0].y - 20;
+    } else if (type === 'sibling' && controlPoints) {
+      // For sibling lines, place icon on the horizontal bar
+      iconPos.x = (controlPoints[0].x + controlPoints[1].x) / 2;
+      iconPos.y = controlPoints[0].y - 20;
+    } else {
+      // Default fallback
+      iconPos.x = (fromPos.x + toPos.x) / 2;
+      iconPos.y = (fromPos.y + toPos.y) / 2 - 20;
+    }
+    
+    // Generate the SVG path based on connection type
+    let pathData = "";
+    
+    if (type === 'spouse') {
+      // Simple horizontal or vertical line for spouses
+      pathData = `M ${fromPos.x} ${fromPos.y} L ${toPos.x} ${toPos.y}`;
+    } else if (type === 'parent-child' && controlPoints) {
+      // Vertical line from parent to child with horizontal connector
+      pathData = `M ${fromPos.x} ${fromPos.y} 
+                  L ${controlPoints[0].x} ${controlPoints[0].y} 
+                  L ${controlPoints[1].x} ${controlPoints[1].y} 
+                  L ${toPos.x} ${toPos.y}`;
+    } else if (type === 'sibling' && controlPoints) {
+      // Connect siblings via a horizontal bar
+      pathData = `M ${fromPos.x} ${fromPos.y} 
+                  L ${controlPoints[0].x} ${controlPoints[0].y} 
+                  L ${controlPoints[1].x} ${controlPoints[1].y} 
+                  L ${toPos.x} ${toPos.y}`;
+    } else {
+      // Fallback to direct line
+      pathData = `M ${fromPos.x} ${fromPos.y} L ${toPos.x} ${toPos.y}`;
+    }
+    
+    return (
+      <g key={id} onClick={(e) => handleLineClick(e, id)}>
+        <path
+          d={pathData}
+          stroke={strokeColor}
+          strokeWidth={strokeWidth}
+          strokeDasharray={style === 'dotted' ? '5,5' : 'none'}
+          fill="none"
+          className="cursor-pointer"
+        />
+        
+        {isSelected && (
+          <g>
+            <circle 
+              cx={iconPos.x} 
+              cy={iconPos.y} 
+              r="15" 
+              fill="white" 
+              stroke={strokeColor}
+              onClick={() => toggleLineStyle(id)}
+            />
+            <g transform={`translate(${iconPos.x - 6}, ${iconPos.y - 6})`}>
+              {style === 'solid' ? (
+                <SeparatorHorizontal 
+                  size={12} 
+                  className="cursor-pointer" 
+                  onClick={() => toggleLineStyle(id)}
+                />
+              ) : (
+                <Minus 
+                  size={12} 
+                  className="cursor-pointer" 
+                  onClick={() => toggleLineStyle(id)}
+                />
+              )}
+            </g>
+          </g>
+        )}
+      </g>
+    );
+  };
+  
   return (
     <div className="relative h-full w-full">
       <div 
@@ -531,54 +710,7 @@ const TreeCanvas = () => {
           )}
           
           <svg className="absolute inset-0 w-full h-full">
-            {relationshipLines.map((line) => {
-              const isSelected = selectedLineId === line.id;
-              const strokeColor = line.type === 'spouse' ? '#9E86ED' : '#555555';
-              const strokeWidth = isSelected ? 4 : 2;
-              
-              return (
-                <g key={line.id}>
-                  <line
-                    x1={line.from.x}
-                    y1={line.from.y}
-                    x2={line.to.x}
-                    y2={line.to.y}
-                    stroke={strokeColor}
-                    strokeWidth={strokeWidth}
-                    strokeDasharray={line.style === 'dotted' ? '5,5' : 'none'}
-                    className="cursor-pointer"
-                    onClick={(e) => handleLineClick(e, line.id)}
-                  />
-                  {isSelected && (
-                    <g>
-                      <circle 
-                        cx={(line.from.x + line.to.x) / 2} 
-                        cy={(line.from.y + line.to.y) / 2} 
-                        r="15" 
-                        fill="white" 
-                        stroke={strokeColor}
-                        onClick={() => toggleLineStyle(line.id)}
-                      />
-                      <g transform={`translate(${(line.from.x + line.to.x) / 2 - 6}, ${(line.from.y + line.to.y) / 2 - 6})`}>
-                        {line.style === 'solid' ? (
-                          <SeparatorHorizontal 
-                            size={12} 
-                            className="cursor-pointer" 
-                            onClick={() => toggleLineStyle(line.id)}
-                          />
-                        ) : (
-                          <Minus 
-                            size={12} 
-                            className="cursor-pointer" 
-                            onClick={() => toggleLineStyle(line.id)}
-                          />
-                        )}
-                      </g>
-                    </g>
-                  )}
-                </g>
-              );
-            })}
+            {familyConnections.map(connection => renderConnectionLine(connection))}
           </svg>
           
           {selectedTree && Object.values(selectedTree.people).map(person => (
