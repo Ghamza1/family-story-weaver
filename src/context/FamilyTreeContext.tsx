@@ -15,6 +15,8 @@ interface FamilyTreeContextType {
     relationshipType: string, 
     relativeId?: string
   ) => void;
+  updatePerson: (personId: string, updatedPerson: Person) => void;
+  removePerson: (personId: string) => void;
 }
 
 const FamilyTreeContext = createContext<FamilyTreeContextType | undefined>(undefined);
@@ -191,6 +193,80 @@ export const FamilyTreeProvider = ({ children }: { children: ReactNode }) => {
     setSelectedPerson(newPerson);
   };
   
+  // Update a person in the selected tree
+  const updatePerson = (personId: string, updatedPerson: Person) => {
+    if (!selectedTree || !selectedTree.people[personId]) return;
+    
+    const updatedTree = { ...selectedTree };
+    updatedTree.people = { ...updatedTree.people, [personId]: updatedPerson };
+    updatedTree.lastModified = new Date();
+    
+    setTrees(prev => prev.map(tree => 
+      tree.id === selectedTree.id ? updatedTree : tree
+    ));
+    
+    if (selectedPerson?.id === personId) {
+      setSelectedPerson(updatedPerson);
+    }
+  };
+  
+  // Remove a person from the selected tree
+  const removePerson = (personId: string) => {
+    if (!selectedTree || !selectedTree.people[personId]) return;
+    
+    const updatedTree = { ...selectedTree };
+    const personToRemove = updatedTree.people[personId];
+    
+    // Remove references to this person from others
+    Object.values(updatedTree.people).forEach(person => {
+      // Remove as father
+      if (person.fatherId === personId) {
+        person.fatherId = undefined;
+      }
+      
+      // Remove as mother
+      if (person.motherId === personId) {
+        person.motherId = undefined;
+      }
+      
+      // Remove from spouse relationships
+      if (person.spouseIds.includes(personId)) {
+        person.spouseIds = person.spouseIds.filter(id => id !== personId);
+      }
+      
+      // Remove from sibling relationships
+      if (person.siblingIds.includes(personId)) {
+        person.siblingIds = person.siblingIds.filter(id => id !== personId);
+      }
+      
+      // Remove from children lists
+      if (person.childrenIds.includes(personId)) {
+        person.childrenIds = person.childrenIds.filter(id => id !== personId);
+      }
+    });
+    
+    // Delete the person
+    const { [personId]: removedPerson, ...remainingPeople } = updatedTree.people;
+    updatedTree.people = remainingPeople;
+    
+    // If this was the root person, set a new root if possible
+    if (updatedTree.rootPersonId === personId) {
+      const peopleIds = Object.keys(updatedTree.people);
+      updatedTree.rootPersonId = peopleIds.length > 0 ? peopleIds[0] : undefined;
+    }
+    
+    updatedTree.lastModified = new Date();
+    
+    setTrees(prev => prev.map(tree => 
+      tree.id === selectedTree.id ? updatedTree : tree
+    ));
+    
+    // Deselect if this was the selected person
+    if (selectedPerson?.id === personId) {
+      setSelectedPerson(null);
+    }
+  };
+  
   const contextValue: FamilyTreeContextType = {
     trees,
     selectedTree,
@@ -198,7 +274,9 @@ export const FamilyTreeProvider = ({ children }: { children: ReactNode }) => {
     selectTree,
     setSelectedPerson,
     createTree,
-    addPerson
+    addPerson,
+    updatePerson,
+    removePerson
   };
   
   return (

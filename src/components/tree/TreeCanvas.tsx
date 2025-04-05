@@ -16,11 +16,13 @@ import {
   Download,
   Upload,
   Printer,
-  Share2
+  Share2,
+  Trash2
 } from "lucide-react";
 import { useFamilyTree } from "@/context/FamilyTreeContext";
 import AddPersonModal from "./AddPersonModal";
 import PersonDetails from "./PersonDetails";
+import EditPersonModal from "./EditPersonModal";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useTranslation } from "react-i18next";
 import {
@@ -41,7 +43,7 @@ interface Line {
 
 const TreeCanvas = () => {
   const { t } = useTranslation();
-  const { selectedTree, selectedPerson, setSelectedPerson } = useFamilyTree();
+  const { selectedTree, selectedPerson, setSelectedPerson, removePerson, updatePerson } = useFamilyTree();
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -53,12 +55,17 @@ const TreeCanvas = () => {
   const [isGridMode, setIsGridMode] = useState(false);
   const [gridPosition, setGridPosition] = useState<{ x: number, y: number } | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [detailsPerson, setDetailsPerson] = useState<Person | null>(null);
   const [showRelativeOptions, setShowRelativeOptions] = useState(false);
+  const [isMovingPerson, setIsMovingPerson] = useState(false);
+  const [personBeingMoved, setPersonBeingMoved] = useState<Person | null>(null);
+  const [customNodePositions, setCustomNodePositions] = useState<Record<string, { x: number; y: number }>>({});
   
   const canvasRef = useRef<HTMLDivElement>(null);
   const lastClickTime = useRef<number>(0);
   const clickTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
   
   const getNodePositions = () => {
     const positions: Record<string, { x: number; y: number }> = {};
@@ -106,7 +113,17 @@ const TreeCanvas = () => {
       return siblings;
     };
     
-    positions[rootId] = { x: centerX, y: centerY };
+    // Use custom positions if available, otherwise calculate
+    for (const id in customNodePositions) {
+      if (people[id]) {
+        positions[id] = { ...customNodePositions[id] };
+      }
+    }
+    
+    // Set root position if not already positioned
+    if (!positions[rootId]) {
+      positions[rootId] = { x: centerX, y: centerY };
+    }
     
     const processAncestors = (personId: string, level = 0, horizontalOffset = 0) => {
       const person = people[personId];
@@ -285,11 +302,31 @@ const TreeCanvas = () => {
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     
+    if (isMovingPerson && personBeingMoved) {
+      // When moving a person, don't start canvas dragging
+      return;
+    }
+    
     setIsDragging(true);
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
   };
   
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (isMovingPerson && personBeingMoved) {
+      // Move the person instead of the canvas
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const x = (e.clientX - rect.left - position.x) / scale;
+      const y = (e.clientY - rect.top - position.y) / scale;
+      
+      setCustomNodePositions(prev => ({
+        ...prev,
+        [personBeingMoved.id]: { x, y }
+      }));
+      return;
+    }
+    
     if (!isDragging) return;
     
     setPosition({
@@ -300,6 +337,16 @@ const TreeCanvas = () => {
   
   const handleMouseUp = () => {
     setIsDragging(false);
+    
+    if (isMovingPerson) {
+      setIsMovingPerson(false);
+      setPersonBeingMoved(null);
+    }
+    
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
   };
   
   const handleWheel = (e: React.WheelEvent) => {
@@ -338,11 +385,28 @@ const TreeCanvas = () => {
       clickTimer.current = null;
     }
     
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+    }
+    
+    // Start a timer to detect long press for moving persons
+    longPressTimer.current = setTimeout(() => {
+      setIsMovingPerson(true);
+      setPersonBeingMoved(person);
+      setSelectedPerson(null);
+      toast.info(t("You can now move this person. Click to place."));
+    }, 500);
+    
     if (timeSinceLastClick < 300) {
-      // Double click - show details
+      // Double click - show details/edit
       setDetailsPerson(person);
       setShowDetailsModal(true);
       setSelectedPerson(null);
+      
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
     } else {
       // Single click - select person
       clickTimer.current = setTimeout(() => {
@@ -374,6 +438,7 @@ const TreeCanvas = () => {
   const handleGridModeToggle = () => {
     setIsGridMode(!isGridMode);
     setSelectedLineId(null);
+    setShowRelativeOptions(false);
   };
 
   const toggleRelativeOptions = () => {
@@ -394,29 +459,50 @@ const TreeCanvas = () => {
     setGridPosition({ x, y });
     handleAddPerson('root');
   };
+  
+  const handleDeletePerson = () => {
+    if (detailsPerson && selectedTree) {
+      setShowDetailsModal(false);
+      removePerson(detailsPerson.id);
+      toast.success(t("Person removed successfully"));
+    }
+  };
+  
+  const handleEditPerson = () => {
+    if (detailsPerson) {
+      setShowDetailsModal(false);
+      setShowEditModal(true);
+    }
+  };
+  
+  const handleEditComplete = (updatedPerson: Person) => {
+    updatePerson(updatedPerson.id, updatedPerson);
+    setShowEditModal(false);
+    toast.success(t("Person updated successfully"));
+  };
 
   // These functions would be implemented fully in a production app
   const handleExportGedcom = () => {
-    toast.info("GEDCOM export would be implemented here");
+    toast.info(t("GEDCOM export would be implemented here"));
   };
   
   const handleImportGedcom = () => {
-    toast.info("GEDCOM import would be implemented here");
+    toast.info(t("GEDCOM import would be implemented here"));
   };
   
   const handlePrintTree = () => {
-    toast.info("Print functionality would be implemented here");
+    toast.info(t("Print functionality would be implemented here"));
   };
   
   const handleShareTree = () => {
-    toast.info("Sharing functionality would be implemented here");
+    toast.info(t("Sharing functionality would be implemented here"));
   };
   
   return (
     <div className="relative h-full w-full">
       <div 
         ref={canvasRef}
-        className={`family-canvas w-full h-full ${isGridMode ? 'cursor-cell' : 'cursor-grab active:cursor-grabbing'}`}
+        className={`family-canvas w-full h-full ${isGridMode ? 'cursor-cell' : isMovingPerson ? 'cursor-move' : 'cursor-grab active:cursor-grabbing'}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -471,6 +557,7 @@ const TreeCanvas = () => {
                         r="15" 
                         fill="white" 
                         stroke={strokeColor}
+                        onClick={() => toggleLineStyle(line.id)}
                       />
                       <g transform={`translate(${(line.from.x + line.to.x) / 2 - 6}, ${(line.from.y + line.to.y) / 2 - 6})`}>
                         {line.style === 'solid' ? (
@@ -612,7 +699,18 @@ const TreeCanvas = () => {
         isOpen={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
         person={detailsPerson}
+        onEdit={handleEditPerson}
+        onDelete={handleDeletePerson}
       />
+      
+      {showEditModal && detailsPerson && (
+        <EditPersonModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          person={detailsPerson}
+          onSave={handleEditComplete}
+        />
+      )}
     </div>
   );
 };
